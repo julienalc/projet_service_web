@@ -1,0 +1,40 @@
+.container {
+    display: flex;
+    background-color: #DCDCDC;
+    font-size:25px;
+    padding: 5px;
+    border: 1px solid #808080;
+    width: 35%;
+}
+
+.container:hover {
+    display: flex;
+    background-color: #A9A9A9;
+    font-size:25px;
+    padding: 5px;
+    border: 1px solid #808080;
+    width: 35%;
+}
+
+img {
+    width: 3rem;
+}
+.info {
+    margin-left: 1rem;
+}
+
+.title {
+    display: flex;
+    background-color: #DCDCDC;
+    font-size:40px;
+    padding: 5px;
+    border: 1px solid #808080;
+    width: 35%;
+    font-weight: bold;
+
+}
+
+.box{
+    display: flex;
+    align-items: center;
+}

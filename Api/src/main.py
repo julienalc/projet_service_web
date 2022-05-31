@@ -1,121 +1,108 @@
-from flask import Flask, request, jsonify, Response
+from flask import Flask, request, jsonify, Response, render_template
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import text
-from faker import Faker
-import random
-import requests
-import json
-from flask_cors import CORS
+
 
 app = Flask(__name__)
-app.config["SQLALCHEMY_DATABASE_URI"] = "postgresql://root:root@localhost:5432/Projet_app"#on definie l'url de la database
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-CORS(app)
+app.config["SQLALCHEMY_DATABASE_URI"] = "postgresql://root:root@localhost:5432/contact"
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-db=SQLAlchemy(app)
+db = SQLAlchemy(app)
 
-@app.route("/contacts", methods=["GET"])
-def users():
-    sql = text("SELECT * FROM contact ORDER BY lastname ASC NULLS LAST")
-    result = db.engine.execute(sql)
-    contacts = []
-    for row in result:
-        contact = {
-            "id": row.id,
-            "firstname": row.firstname,
-            "lastname": row.lastname,
-            "phone": row.phone,
-            "email" : row.email,
-            "address" : row.address,
-            "dob" : row.dob,
-            "picture": row.picture,
-            "job":row.job,
+@app.route("/contact", methods = ["POST", "GET"])
+def contact():
+    if request.method == "GET":
+        result = Contact.query.all()
+        contacts = []
+        for row in result:
+            contact = {
+                "id" : row.id,
+                "firstname" : row.firstname,
+                "lastname" : row.lastname,
+                "number": row.number,
+                "email" : row.email,
+                "adress" : row.adress,
+                "birthday":row.birthday,
+                "picture":row.picture
             }
-        contacts.append(contact)
-    return (jsonify(contacts))
+            contacts.append(contact)
+        return jsonify(contacts)
 
-@app.route("/contacts/<id>", methods=["GET"])
-def users_by_contact(id):
+    if request.method == "POST":
+        data = request.json
+        new_contact = Contact(
+            data["firstname"],
+            data["lastname"],
+            data["number"],
+            data["email"],
+            data["adress"],
+            data["birthday"],
+            data["picture"]
+        )
+        db.session.add(new_contact)
+        db.session.commit()
+        return Response(status=200)
+
+@app.route("/contact/<id>", methods=["GET"])
+def contact_by_id(id):
     result = Contact.query.filter_by(id=id).first_or_404()
     contacts = []
     contact = {
         "id": result.id,
         "firstname": result.firstname,
         "lastname": result.lastname,
-        "phone": result.phone,
+        "number": result.number,
         "email": result.email,
-        "address": result.address,
-        "dob": result.dob,
-        "picture": result.picture,
-        "job": result.job,
+        "adress": result.adress,
+        "birthday": result.birthday,
+        "picture": result.picture
     }
     contacts.append(contact)
     return (jsonify(contacts))
 
+
 class Contact(db.Model):
     id = db.Column(db.Integer, primary_key = True)
-    firstname = db.Column(db.String(500))
-    lastname = db.Column(db.String(500))
-    phone = db.Column(db.String(500))
-    email = db.Column(db.String(500))
-    address = db.Column(db.String(500))
-    dob = db.Column(db.Date)
+    firstname = db.Column(db.String(100))
+    lastname = db.Column(db.String(100))
+    number = db.Column(db.String(100))
+    email = db.Column(db.String(100))
+    adress = db.Column(db.String(100))
+    birthday = db.Column(db.String(100))
     picture = db.Column(db.String(500))
-    job = db.Column(db.String(500))
 
-    def __init__(self, firstname, lastname, phone, email, address, dob, picture, job):
+
+    def __init__(self, id, firstname, lastname, number, email, adress, birthday, picture):
+        self.id = id
         self.firstname = firstname
         self.lastname = lastname
-        self.phone = phone
+        self.number = number
         self.email = email
-        self.address = address
-        self.dob = dob
+        self.adress = adress
+        self.birthday = birthday
         self.picture = picture
-        self.job = job 
 
+
+from faker import Faker
 fake = Faker()
-def populate_table():
-    for n in range(0, 50):
-        result = requests.get("https://randomuser.me/api/")
-        data = result.text
-        parse_json = json.loads(data)
 
-        firstname = parse_json['results'][0]['name']['first']
-        lastname = parse_json['results'][0]['name']['last']
-        phone = parse_json['results'][0]['phone']
-        email = parse_json['results'][0]['email']
-        address = str(parse_json['results'][0]['location']['street']['number']) + " " + str(parse_json['results'][0]['location']['street']['name']) + ", " + str(parse_json['results'][0]['location']['postcode']) + " " + str(parse_json['results'][0]['location']['city']) + "\n"+ str(parse_json['results'][0]['location']['state']) + " " + str(parse_json['results'][0]['location']['country'])
-        dob = parse_json['results'][0]['dob']['date'].split('T', 1)[0]
-        picture = parse_json['results'][0]['picture']['thumbnail']
-        job = fake.job()
+def populate():
+    for n in range(1, 100):
+        id = n
+        firstname = fake.first_name()
+        lastname = fake.last_name()
+        number = fake.phone_number()
+        email = fake.email()
+        adress = fake.address()
+        birthday = fake.date()
+        picture = "https://upload.wikimedia.org/wikipedia/commons/thumb/9/93/Google_Contacts_icon.svg/langfr-1024px-Google_Contacts_icon.svg.png"
 
-        new_contact=Contact(firstname, lastname, phone, email, address, dob, picture, job)
-        nb_app=random.randint(1,4) 
+        new_contact = Contact(id, firstname, lastname, number, email, adress, birthday, picture)
         db.session.add(new_contact)
     db.session.commit()
 
-@app.route("/")
-def say_hello():
-    sql = text("SELECT * FROM contact ORDER BY lastname ASC NULLS LAST")
-    result = db.engine.execute(sql)
-    contacts = []
-    for row in result:
-        contact = {
-            "id": row.id,
-            "firstname": row.firstname,
-            "lastname": row.lastname,
-            "phone": row.phone,
-            "email": row.email,
-            "address": row.address,
-            "dob": row.dob,
-            "picture": row.picture,
-            "job": row.job,
-        }
-        contacts.append(contact)
-    return (jsonify(contacts))
 
 if __name__ == '__main__':
     db.drop_all()
     db.create_all()
-    populate_table()
-    app.run(host='0.0.0.0', port=8080, debug=True)
+    populate()
+    app.run(host="0.0.0.0", port=8080, debug=True)

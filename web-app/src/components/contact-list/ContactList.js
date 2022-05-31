@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import ContactItem from './ContactItem';
 import { Link } from "react-router-dom";
+import styles from './contact-items.module.css';
 
 export default function ContactList() {
 
@@ -9,16 +10,7 @@ export default function ContactList() {
     // Reminder: the difference between a regular variable
     // and a state is when states changes, the component is re-rendered
     // meaning the JSX (HTML) will be too
-    const [contacts, setContacts] = useState({
-        firstname: "julien",
-        lastname: "Alcaraz",
-        phone: "0600000000",
-        email: "julien.alcaraz@gmail.com",
-        address: "rue de vilier",
-        dob: "06/03/2000",
-        picture: "",
-        job: "ETUDIANT",
-    });
+    const [contacts, setContacts] = useState([]);
 
     // Reminder: the useEffect hook let us define piece of code that should be
     // executed at a specific moment of the component life-cycle
@@ -29,55 +21,39 @@ export default function ContactList() {
     // annonymous function passed as the first parameter will be executed once the component is rendered
     // It's usually a good place to make API calls.
     useEffect(() => {
-        fetch("http://127.0.0.1:5000/contacts", {
-            method: 'GET',
-            headers: {
-                'Accept': 'application/json',
-                'Access-Control-Allow-Credentials': 'true',
-                'Access-Control-Allow-Origin': '*',
-                'Content-Type': 'application/json'
-            }
-            })
-            .then(response => {
-                if (response.ok){
-                    return response.json()
-                }
-                throw response;
-            })
-            .then(data => {
-                setContacts(data);
-            })
-            .catch(error => {
-              console.error("Error fetching data: ", error);
-              setError(error);
-            })
-            .finally(() => {
-                setLoading(false);
-            })
-
+        fetch("/contact")
+            .then(data => data.json())
+            .then(data => setContacts(data));
     }, []);
 
 
     // Using an array.map() to map/transform a list of wine (data)
     // to a list of <li><Link to={route}><ContactItem data={wine}/></Link></li>
     // This usually how we display lists of items in a React application
+
     const items = contacts.map(user => {
         const id = user.id;
         const route = "/contact/" + id;
         return (
-            <li>
-                <Link to={route} style={{ textDecoration: 'none' }}><ContactItem data={user} /></Link>
-            </li>
+            <div className={styles.container}>
+                <Link to={route}><ContactItem data={user} /></Link>
+            </div>
         );
     });
 
+    if (contacts.length > 0) {
+        return (
+            <div>
+                <div className={styles.title}>Contacts</div>
+                <div>
+                    {items}
+                </div>
+            </div>
 
-    return (
-        <div>
-            <ul>
-                {items}
-            </ul>
-        </div>
-    )
-    
+        )
+    }
+
+    else {
+        <p>Conversation are being fetched...</p>
+    }
 }

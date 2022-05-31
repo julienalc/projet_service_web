@@ -9,10 +9,13 @@ export default function ContactItem(props) {
     return (
         // When using CSS sheets or CSS modules (CSS modules being scoped CSS sheets)
         // the CSS classes should be defined in the className attribute of the JSX/HTML tags
-        <div className={styles.container}>
-            <img src={props.data.image} />
-            <div className={styles.info}>
-                <span className={styles.label}>{props.data.lastname.toUpperCase()} {props.data.firstname}</span>
+        <div>
+            <div>
+
+            </div>
+            <div className={styles.box}>
+                <img src={props.data.picture} />
+                <span className={styles.info}>{props.data.lastname} {props.data.firstname}</span>
             </div>
         </div>
     )
